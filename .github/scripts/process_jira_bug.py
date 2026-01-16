@@ -12,6 +12,7 @@ import urllib.error
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
+from textwrap import dedent
 import time
 
 # Configuration from GitHub Secrets
@@ -268,12 +269,12 @@ class JiraGitHubProcessor:
         # Get description safely
         description = fields.get('description', '')
         if isinstance(description, dict):
-            # If it's Atlassian Document Format, extract text
             description = self._extract_text_from_adf(description)
         elif description is None:
             description = 'No description provided'
         
-        issue_body = f"""## 🐛 Bug Report from Jira
+        issue_body = dedent(f"""\
+        ## 🐛 Bug Report from Jira
         
         **Jira Key:** [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key})  
         **Priority:** {fields.get('priority', {}).get('name', 'Medium')}  
@@ -295,7 +296,7 @@ class JiraGitHubProcessor:
         ---
         *Automatically created on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC*  
         *💰 Zero-Cost Python Integration* 🐍
-        \"\"\"
+        """)
         
         # Prepare API request
         owner, repo = CONFIG['GITHUB_REPOSITORY'].split('/')
@@ -437,3 +438,4 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
