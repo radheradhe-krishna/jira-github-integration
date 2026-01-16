@@ -435,11 +435,5 @@ def main():
     processor = JiraGitHubProcessor(bug_key)
     return processor.run()
 
-
 if __name__ == '__main__':
-
     sys.exit(main())
-
-
-
-
