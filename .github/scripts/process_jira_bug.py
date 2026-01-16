@@ -273,7 +273,7 @@ class JiraGitHubProcessor:
         elif description is None:
             description = 'No description provided'
         
-        issue_body = f\"\"\"## 🐛 Bug Report from Jira
+        issue_body = f"""## 🐛 Bug Report from Jira
         
         **Jira Key:** [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key})  
         **Priority:** {fields.get('priority', {}).get('name', 'Medium')}  
@@ -439,6 +439,7 @@ def main():
 if __name__ == '__main__':
 
     sys.exit(main())
+
 
 
 
