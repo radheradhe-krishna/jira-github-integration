@@ -1,5 +1,7 @@
 name: Jira to GitHub Integration (Zero-Cost)
-
+permissions:
+  issues: write
+  contents: read
 on:
   repository_dispatch:
     types: [jira-bug-created]
@@ -81,4 +83,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Monthly Cost:** \$0.00 ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
           echo "✨ *Running on free GitHub Actions tier*" >> $GITHUB_STEP_SUMMARY
