@@ -4,7 +4,10 @@ permissions:
   contents: write
 on:
   repository_dispatch:
-    types: [jira-bug-created]
+    types: 
+      - jira-bug-created
+      - jira-label-added
+      - jira-label-changed
   
   workflow_dispatch:
     inputs:
@@ -39,10 +42,11 @@ jobs:
           echo "╚════════════════════════════════════════════════════════╝"
           echo ""
           if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            echo "Trigger:     Jira Automation"
+            echo "Trigger:     Jira Automation (${{ github.event.action }})"
             echo "Bug Key:     ${{ github.event.client_payload.bug_key }}"
             echo "Summary:     ${{ github.event.client_payload.summary }}"
             echo "Priority:    ${{ github.event.client_payload.priority }}"
+            echo "Labels:      ${{ github.event.client_payload.labels }}"
           else
             echo "Trigger:     Manual Test"
             echo "Bug Key:     ${{ github.event.inputs.bug_key }}"
@@ -85,4 +89,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "✨ *Running on free GitHub Actions tier*" >> $GITHUB_STEP_SUMMARY
+
 
