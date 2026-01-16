@@ -203,38 +203,39 @@ class JiraGitHubProcessor:
             print(f"⚠️  Failed to create release: {e.code} - {e.reason}")
             print(f"   Attachments will be listed in issue without download links")
     
-def _upload_asset(self, upload_url, attachment):
-    """Upload single file as release asset"""
-    print(f"   Uploading: {attachment['filename']}")
 
-    with open(attachment['path'], 'rb') as f:
-        file_data = f.read()
+    def _upload_asset(self, upload_url, attachment):
+        """Upload single file as release asset"""
+        print(f"   Uploading: {attachment['filename']}")
 
-    # URL-encode the filename (spaces/special chars)
-    safe_name = quote(attachment['filename'], safe='')
-    asset_url = f"{upload_url}?name={safe_name}"
+        with open(attachment['path'], 'rb') as f:
+            file_data = f.read()
 
-    request = urllib.request.Request(asset_url, data=file_data, method='POST')
-    request.add_header('Authorization', f"Bearer {CONFIG['GITHUB_TOKEN']}")
-    request.add_header('Accept', 'application/vnd.github+json')  # ask for JSON response
-    request.add_header('Content-Type', attachment.get('mime_type', 'application/octet-stream'))
-    request.add_header('Content-Length', str(len(file_data)))
+        # URL-encode the filename (spaces/special chars)
+        safe_name = quote(attachment['filename'], safe='')
+        asset_url = f"{upload_url}?name={safe_name}"
 
-    try:
-        with urllib.request.urlopen(request, timeout=60) as response:
-            asset = json.loads(response.read().decode('utf-8'))
-            attachment['github_url'] = asset.get('browser_download_url')
-            print(f"   ✅ Uploaded: {attachment['filename']}")
-            print(f"      URL: {attachment['github_url']}")
-    except urllib.error.HTTPError as e:
-        # Print the response body to help troubleshooting
+        request = urllib.request.Request(asset_url, data=file_data, method='POST')
+        request.add_header('Authorization', f"Bearer {CONFIG['GITHUB_TOKEN']}")
+        request.add_header('Accept', 'application/vnd.github+json')  # ask for JSON response
+        request.add_header('Content-Type', attachment.get('mime_type', 'application/octet-stream'))
+        request.add_header('Content-Length', str(len(file_data)))
+
         try:
-            body = e.read().decode('utf-8')
-        except Exception:
-            body = '<no body>'
-        print(f"   ⚠️  Failed to upload {attachment['filename']}: {e.code} - {e.reason}")
-        print(f"      Response: {body}")
-    
+            with urllib.request.urlopen(request, timeout=60) as response:
+                asset = json.loads(response.read().decode('utf-8'))
+                attachment['github_url'] = asset.get('browser_download_url')
+                print(f"   ✅ Uploaded: {attachment['filename']}")
+                print(f"      URL: {attachment['github_url']}")
+        except urllib.error.HTTPError as e:
+            # Print the response body to help troubleshooting
+            try:
+                body = e.read().decode('utf-8')
+            except Exception:
+                body = '<no body>'
+            print(f"   ⚠️  Failed to upload {attachment['filename']}: {e.code} - {e.reason}")
+            print(f"      Response: {body}")
+
     def create_github_issue(self):
         """Create GitHub issue with bug details and attachment links"""
         print("🔨 Creating GitHub issue...")
@@ -272,29 +273,29 @@ def _upload_asset(self, upload_url, attachment):
         elif description is None:
             description = 'No description provided'
         
-        issue_body = f"""## 🐛 Bug Report from Jira
-
-**Jira Key:** [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key})  
-**Priority:** {fields.get('priority', {}).get('name', 'Medium')}  
-**Status:** {fields.get('status', {}).get('name', 'Unknown')}  
-**Reporter:** {fields.get('reporter', {}).get('displayName', 'Unknown')}  
-
-## 📝 Description
-{description}
-
-## 🌍 Environment
-{fields.get('environment', 'Not specified')}
-
-{label_section}
-
-{component_section}
-
-{attachment_section}
-
----
-*Automatically created on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC*  
-*💰 Zero-Cost Python Integration* 🐍
-"""
+        issue_body = f\"\"\"## 🐛 Bug Report from Jira
+        
+        **Jira Key:** [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key})  
+        **Priority:** {fields.get('priority', {}).get('name', 'Medium')}  
+        **Status:** {fields.get('status', {}).get('name', 'Unknown')}  
+        **Reporter:** {fields.get('reporter', {}).get('displayName', 'Unknown')}  
+        
+        ## 📝 Description
+        {description}
+        
+        ## 🌍 Environment
+        {fields.get('environment', 'Not specified')}
+        
+        {label_section}
+        
+        {component_section}
+        
+        {attachment_section}
+        
+        ---
+        *Automatically created on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC*  
+        *💰 Zero-Cost Python Integration* 🐍
+        \"\"\"
         
         # Prepare API request
         owner, repo = CONFIG['GITHUB_REPOSITORY'].split('/')
@@ -438,5 +439,6 @@ def main():
 if __name__ == '__main__':
 
     sys.exit(main())
+
 
 
