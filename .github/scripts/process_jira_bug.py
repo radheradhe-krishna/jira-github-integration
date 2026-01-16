@@ -188,6 +188,7 @@ class JiraGitHubProcessor:
         request.add_header('Authorization', f"Bearer {CONFIG['GITHUB_TOKEN']}")
         request.add_header('Accept', 'application/vnd.github+json')
         request.add_header('Content-Type', 'application/json')
+        request.add_header('X-GitHub-Api-Version', '2022-11-28')
         
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
@@ -195,35 +196,51 @@ class JiraGitHubProcessor:
                 upload_url = release['upload_url'].replace('{?name,label}', '')
                 
                 print(f"✅ Release created: {release_tag}")
+                print(f"   Upload URL: {upload_url}")
                 
                 # Upload each attachment
                 for attachment in self.attachments:
                     self._upload_asset(upload_url, attachment)
                     
         except urllib.error.HTTPError as e:
-            print(f"⚠️  Failed to create release: {e.code} - {e.reason}")
+            try:
+                error_body = e.read().decode('utf-8')
+                error_data = json.loads(error_body)
+                error_msg = error_data.get('message', error_body)
+            except Exception:
+                error_msg = e.reason
+            
+            print(f"⚠️  Failed to create release: {e.code} - {error_msg}")
+            print(f"   Attachments will be listed in issue without download links")
+        except Exception as e:
+            print(f"⚠️  Unexpected error creating release: {str(e)}")            
             print(f"   Attachments will be listed in issue without download links")
     
 
     def _upload_asset(self, upload_url, attachment):
         """Upload single file as release asset"""
-        print(f"   Uploading: {attachment['filename']}")
+        print(f"   Uploading: {attachment['filename']} ({self._format_size(attachment['size'])})")
 
-        with open(attachment['path'], 'rb') as f:
-            file_data = f.read()
-
+        try:
+            with open(attachment['path'], 'rb') as f:
+                file_data = f.read()
+        except Exception as e:
+            print(f"   ⚠️  Failed to read file {attachment['filename']}: {str(e)}")
+            return
+            
         # URL-encode the filename (spaces/special chars)
         safe_name = quote(attachment['filename'], safe='')
         asset_url = f"{upload_url}?name={safe_name}"
 
         request = urllib.request.Request(asset_url, data=file_data, method='POST')
         request.add_header('Authorization', f"Bearer {CONFIG['GITHUB_TOKEN']}")
-        request.add_header('Accept', 'application/vnd.github+json')  # ask for JSON response
+        request.add_header('Accept', 'application/vnd.github+json')
         request.add_header('Content-Type', attachment.get('mime_type', 'application/octet-stream'))
         request.add_header('Content-Length', str(len(file_data)))
+        request.add_header('X-GitHub-Api-Version', '2022-11-28')
 
         try:
-            with urllib.request.urlopen(request, timeout=60) as response:
+            with urllib.request.urlopen(request, timeout=120) as response:
                 asset = json.loads(response.read().decode('utf-8'))
                 attachment['github_url'] = asset.get('browser_download_url')
                 print(f"   ✅ Uploaded: {attachment['filename']}")
@@ -232,10 +249,19 @@ class JiraGitHubProcessor:
             # Print the response body to help troubleshooting
             try:
                 body = e.read().decode('utf-8')
+                error_data = json.loads(body)
+                error_msg = error_data.get('message', body)
             except Exception:
                 body = '<no body>'
-            print(f"   ⚠️  Failed to upload {attachment['filename']}: {e.code} - {e.reason}")
-            print(f"      Response: {body}")
+            error_msg = e.reason
+            
+            print(f"   ⚠️  Failed to upload {attachment['filename']}: {e.code} - {error_msg}")
+            if e.code == 403:
+                print(f"      Hint: Check that workflow has 'contents: write' permission")
+            elif e.code == 422:
+                print(f"      Hint: Asset might already exist or filename is invalid")
+        except Exception as e:
+            print(f"   ⚠️  Unexpected error uploading {attachment['filename']}: {str(e)}")
 
     def create_github_issue(self):
         """Create GitHub issue with bug details and attachment links"""
@@ -438,4 +464,5 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
