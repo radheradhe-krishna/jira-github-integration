@@ -328,10 +328,8 @@ class JiraGitHubProcessor:
         # 🐛 {bug_type}: {fields['summary']}
         
         ## 📋 Jira Details
-        issue_body = dedent(f"""\
-        ## 🐛 Bug Report from Jira
         
-         | Field | Value |
+        | Field | Value |
         |-------|-------|
         | **Jira Key** | [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key}) |
         | **Type** | {bug_type} |
@@ -346,24 +344,32 @@ class JiraGitHubProcessor:
         | **Affected Version(s)** | {versions_text} |
         | **Fix Version(s)** | {fix_versions_text} |
         
-        --- 
+        ---
         
         ## 📝 Description
+        
         {description}
+        
         ---
+        
         ## 🌍 Environment
+        
         {environment}
+        
         ---
         {attachment_section}
         {custom_fields_section}
         
         ## 🔄 Next Steps
+        
         - [ ] Review the bug details and attachments
         - [ ] Reproduce the issue in the specified environment
         - [ ] Investigate root cause
         - [ ] Implement fix and add tests
         - [ ] Update Jira ticket with resolution
+        
         ---
+        
         <details>
         <summary>📊 Metadata</summary>
         
@@ -444,8 +450,8 @@ class JiraGitHubProcessor:
         
         extract_content(adf_doc)
         return '\n'.join(text_parts) if text_parts else 'No description provided'
-
-       def _get_file_icon(self, filename):
+    
+    def _get_file_icon(self, filename):
         """Get emoji icon based on file extension"""
         ext = filename.lower().split('.')[-1] if '.' in filename else ''
         icons = {
@@ -567,6 +573,5 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
 
 
