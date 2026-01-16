@@ -274,7 +274,8 @@ class JiraGitHubProcessor:
         priority = fields.get('priority', {}).get('name', 'Medium')
         status = fields.get('status', {}).get('name', 'Unknown')
         reporter = fields.get('reporter', {}).get('displayName', 'Unknown')
-        assignee = fields.get('assignee', {}).get('displayName', 'Unassigned')
+        assignee_field = fields.get('assignee')
+        assignee = assignee_field.get('displayName', 'Unassigned') if assignee_field else 'Unassigned'
         created = fields.get('created', 'Unknown')
         updated = fields.get('updated', 'Unknown')
         
@@ -405,7 +406,8 @@ class JiraGitHubProcessor:
         issue_data = {
             'title': f"[{self.bug_key}] {fields['summary']}",
             'body': issue_body,
-            'labels': issue_labels
+            'labels': issue_labels,
+            'assignees': ['copilot']  # Assign to GitHub Copilot
         }
         
         request = urllib.request.Request(
