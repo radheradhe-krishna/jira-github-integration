@@ -269,28 +269,14 @@ class JiraGitHubProcessor:
         
         fields = self.bug_data['fields']
         
-        # Build attachment section
-        attachment_section = ""
-        if self.attachments:
-            attachment_section = "\n## 📎 Attachments\n\n"
-            for att in self.attachments:
-                size_kb = att['size'] / 1024
-                if att['github_url']:
-                    attachment_section += f"- [{att['filename']}]({att['github_url']}) ({size_kb:.2f} KB)\n"
-                else:
-                    attachment_section += f"- {att['filename']} ({size_kb:.2f} KB) - *Download failed*\n"
-        
-        # Build labels
-        labels = fields.get('labels', [])
-        label_section = ""
-        if labels:
-            label_section = f"\n## 🏷️ Labels\n{', '.join(labels)}\n"
-        
-        # Build components
-        components = [c['name'] for c in fields.get('components', [])]
-        component_section = ""
-        if components:
-            component_section = f"\n## 📦 Components\n{', '.join(components)}\n"
+        # Extract key fields
+        bug_type = fields.get('issuetype', {}).get('name', 'Bug')
+        priority = fields.get('priority', {}).get('name', 'Medium')
+        status = fields.get('status', {}).get('name', 'Unknown')
+        reporter = fields.get('reporter', {}).get('displayName', 'Unknown')
+        assignee = fields.get('assignee', {}).get('displayName', 'Unassigned')
+        created = fields.get('created', 'Unknown')
+        updated = fields.get('updated', 'Unknown')
         
         # Get description safely
         description = fields.get('description', '')
@@ -298,41 +284,122 @@ class JiraGitHubProcessor:
             description = self._extract_text_from_adf(description)
         elif description is None:
             description = 'No description provided'
+            
+        # Build components section
+        components = [c['name'] for c in fields.get('components', [])]
+        components_text = ', '.join(components) if components else 'None'
         
+        # Build labels section
+        labels = fields.get('labels', [])
+        labels_text = ', '.join(f'`{label}`' for label in labels) if labels else 'None'
+        
+        # Build affected versions
+        affected_versions = [v['name'] for v in fields.get('versions', [])]
+        versions_text = ', '.join(affected_versions) if affected_versions else 'Not specified'
+        
+        # Build fix versions
+        fix_versions = [v['name'] for v in fields.get('fixVersions', [])]
+        fix_versions_text = ', '.join(fix_versions) if fix_versions else 'Not specified'
+        
+        # Build environment info
+        environment = fields.get('environment', '')
+        if isinstance(environment, dict):
+            environment = self._extract_text_from_adf(environment)
+        elif not environment:
+            environment = 'Not specified'
+        
+        # Build attachment section with visual formatting
+        attachment_section = ""
+        if self.attachments:
+            attachment_section = "\n## 📎 Attachments\n\n"
+            for att in self.attachments:
+                size_kb = att['size'] / 1024
+                file_icon = self._get_file_icon(att['filename'])
+                if att['github_url']:
+                    attachment_section += f"- {file_icon} **[{att['filename']}]({att['github_url']})** - {size_kb:.2f} KB\n"
+                else:
+                    attachment_section += f"- {file_icon} **{att['filename']}** - {size_kb:.2f} KB ⚠️ *Upload failed*\n"
+        
+        # Build custom fields section if any
+        custom_fields_section = self._build_custom_fields_section(fields)
+        
+        # Create comprehensive issue body as a structured prompt
+        issue_body = dedent(f"""\
+        # 🐛 {bug_type}: {fields['summary']}
+        
+        ## 📋 Jira Details
         issue_body = dedent(f"""\
         ## 🐛 Bug Report from Jira
         
-        **Jira Key:** [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key})  
-        **Priority:** {fields.get('priority', {}).get('name', 'Medium')}  
-        **Status:** {fields.get('status', {}).get('name', 'Unknown')}  
-        **Reporter:** {fields.get('reporter', {}).get('displayName', 'Unknown')}  
+         | Field | Value |
+        |-------|-------|
+        | **Jira Key** | [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key}) |
+        | **Type** | {bug_type} |
+        | **Priority** | {priority} |
+        | **Status** | {status} |
+        | **Reporter** | {reporter} |
+        | **Assignee** | {assignee} |
+        | **Created** | {created} |
+        | **Last Updated** | {updated} |
+        | **Components** | {components_text} |
+        | **Labels** | {labels_text} |
+        | **Affected Version(s)** | {versions_text} |
+        | **Fix Version(s)** | {fix_versions_text} |
+        
+        --- 
         
         ## 📝 Description
         {description}
-        
-        ## 🌍 Environment
-        {fields.get('environment', 'Not specified')}
-        
-        {label_section}
-        
-        {component_section}
-        
-        {attachment_section}
-        
         ---
-        *Automatically created on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC*  
-        *💰 Zero-Cost Python Integration* 🐍
+        ## 🌍 Environment
+        {environment}
+        ---
+        {attachment_section}
+        {custom_fields_section}
+        
+        ## 🔄 Next Steps
+        - [ ] Review the bug details and attachments
+        - [ ] Reproduce the issue in the specified environment
+        - [ ] Investigate root cause
+        - [ ] Implement fix and add tests
+        - [ ] Update Jira ticket with resolution
+        ---
+        <details>
+        <summary>📊 Metadata</summary>
+        
+        - **Integration Type:** Zero-Cost Python Integration 🐍
+        - **Sync Time:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC
+        - **Jira Project:** {self.bug_data.get('key', '').split('-')[0] if self.bug_data.get('key') else 'Unknown'}
+        - **Automation:** GitHub Actions Workflow
+        
+        </details>
         """)
         
         # Prepare API request
         owner, repo = CONFIG['GITHUB_REPOSITORY'].split('/')
         url = f"https://api.github.com/repos/{owner}/{repo}/issues"
         
-        priority = fields.get('priority', {}).get('name', 'Medium').lower()
+        issue_labels = ['jira-bug', 'automated']
+        
+        # Add priority label
+        priority_lower = priority.lower()
+        issue_labels.append(priority_lower)
+        
+        # Add component labels
+        if components:
+            issue_labels.extend([f"component:{comp.lower().replace(' ', '-')}" for comp in components])
+        
+        # Add Jira labels
+        issue_labels.extend(labels)
+        
+        # Add bug type if it's not "Bug"
+        if bug_type.lower() != 'bug':
+            issue_labels.append(f"type:{bug_type.lower().replace(' ', '-')}")
+            
         issue_data = {
             'title': f"[{self.bug_key}] {fields['summary']}",
             'body': issue_body,
-            'labels': ['jira-bug', 'automated', priority] + labels
+            'labels': issue_labels
         }
         
         request = urllib.request.Request(
@@ -377,7 +444,43 @@ class JiraGitHubProcessor:
         
         extract_content(adf_doc)
         return '\n'.join(text_parts) if text_parts else 'No description provided'
+
+       def _get_file_icon(self, filename):
+        """Get emoji icon based on file extension"""
+        ext = filename.lower().split('.')[-1] if '.' in filename else ''
+        icons = {
+            'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🖼️', 'svg': '🖼️',
+            'pdf': '📄', 'doc': '📄', 'docx': '📄', 'txt': '📄',
+            'zip': '📦', 'tar': '📦', 'gz': '📦', 'rar': '📦',
+            'log': '📝', 'json': '📋', 'xml': '📋', 'yaml': '📋', 'yml': '📋',
+            'mp4': '🎥', 'avi': '🎥', 'mov': '🎥',
+            'mp3': '🎵', 'wav': '🎵',
+        }
+        return icons.get(ext, '📎')
     
+    def _build_custom_fields_section(self, fields):
+        """Build section for custom fields if they exist"""
+        custom_fields = []
+        
+        # Look for common custom fields
+        for key, value in fields.items():
+            if key.startswith('customfield_') and value:
+                # Try to extract meaningful data
+                if isinstance(value, dict):
+                    if 'value' in value:
+                        custom_fields.append(f"- **{key}**: {value['value']}")
+                    elif 'name' in value:
+                        custom_fields.append(f"- **{key}**: {value['name']}")
+                elif isinstance(value, list) and value:
+                    items = ', '.join([str(item.get('value', item)) if isinstance(item, dict) else str(item) for item in value])
+                    custom_fields.append(f"- **{key}**: {items}")
+                elif isinstance(value, (str, int, float, bool)):
+                    custom_fields.append(f"- **{key}**: {value}")
+        
+        if custom_fields:
+            return "\n## 🔧 Custom Fields\n\n" + '\n'.join(custom_fields) + "\n\n---\n"
+        return ""
+
     def update_jira(self):
         """Add comment to Jira with GitHub issue link"""
         print("🔗 Updating Jira with GitHub link...")
@@ -464,5 +567,6 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 
