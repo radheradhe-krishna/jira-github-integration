@@ -11,6 +11,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote
 import time
 
 # Configuration from GitHub Secrets
@@ -202,27 +203,37 @@ class JiraGitHubProcessor:
             print(f"⚠️  Failed to create release: {e.code} - {e.reason}")
             print(f"   Attachments will be listed in issue without download links")
     
-    def _upload_asset(self, upload_url, attachment):
-        """Upload single file as release asset"""
-        print(f"   Uploading: {attachment['filename']}")
-        
-        with open(attachment['path'], 'rb') as f:
-            file_data = f.read()
-        
-        asset_url = f"{upload_url}?name={attachment['filename']}"
-        
-        request = urllib.request.Request(asset_url, data=file_data, method='POST')
-        request.add_header('Authorization', f"Bearer {CONFIG['GITHUB_TOKEN']}")
-        request.add_header('Content-Type', attachment['mime_type'])
-        
+def _upload_asset(self, upload_url, attachment):
+    """Upload single file as release asset"""
+    print(f"   Uploading: {attachment['filename']}")
+
+    with open(attachment['path'], 'rb') as f:
+        file_data = f.read()
+
+    # URL-encode the filename (spaces/special chars)
+    safe_name = quote(attachment['filename'], safe='')
+    asset_url = f"{upload_url}?name={safe_name}"
+
+    request = urllib.request.Request(asset_url, data=file_data, method='POST')
+    request.add_header('Authorization', f"Bearer {CONFIG['GITHUB_TOKEN']}")
+    request.add_header('Accept', 'application/vnd.github+json')  # ask for JSON response
+    request.add_header('Content-Type', attachment.get('mime_type', 'application/octet-stream'))
+    request.add_header('Content-Length', str(len(file_data)))
+
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            asset = json.loads(response.read().decode('utf-8'))
+            attachment['github_url'] = asset.get('browser_download_url')
+            print(f"   ✅ Uploaded: {attachment['filename']}")
+            print(f"      URL: {attachment['github_url']}")
+    except urllib.error.HTTPError as e:
+        # Print the response body to help troubleshooting
         try:
-            with urllib.request.urlopen(request, timeout=60) as response:
-                asset = json.loads(response.read().decode('utf-8'))
-                attachment['github_url'] = asset['browser_download_url']
-                print(f"   ✅ Uploaded: {attachment['filename']}")
-                print(f"      URL: {attachment['github_url']}")
-        except urllib.error.HTTPError as e:
-            print(f"   ⚠️  Failed to upload {attachment['filename']}: {e.code}")
+            body = e.read().decode('utf-8')
+        except Exception:
+            body = '<no body>'
+        print(f"   ⚠️  Failed to upload {attachment['filename']}: {e.code} - {e.reason}")
+        print(f"      Response: {body}")
     
     def create_github_issue(self):
         """Create GitHub issue with bug details and attachment links"""
@@ -427,4 +438,5 @@ def main():
 if __name__ == '__main__':
 
     sys.exit(main())
+
 
