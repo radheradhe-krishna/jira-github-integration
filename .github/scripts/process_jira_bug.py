@@ -324,36 +324,73 @@ class JiraGitHubProcessor:
         # Build custom fields section if any
         custom_fields_section = self._build_custom_fields_section(fields)
         
-        # Create comprehensive issue body as a structured prompt
+        # Create comprehensive issue body optimized as a prompt for GitHub Copilot
         issue_body = dedent(f"""\
-        # 🐛 {bug_type}: {fields['summary']}
+        # {bug_type}: {fields['summary']}
         
-        ## 📋 Jira Details
+        > 💡 **@github-copilot** Help me understand and fix this issue
         
         | Field | Value |
         |-------|-------|
-        | **Jira Key** | [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key}) |
-        | **Type** | {bug_type} |
-        | **Priority** | {priority} |
-        | **Status** | {status} |
-        | **Reporter** | {reporter} |
-        | **Assignee** | {assignee} |
-        | **Created** | {created} |
-        | **Last Updated** | {updated} |
+        | **Jira** | [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key}) |
+        | **Priority** | {priority} • **Status** | {status} |
+        | **Reporter** | {reporter} • **Assignee** | {assignee} |
         | **Components** | {components_text} |
         | **Labels** | {labels_text} |
+        | **Versions** | {versions_text} → {fix_versions_text} |
+        
+        ## Description
+        
+        {description}
+        
+        **Environment:**
+        ```
+        {environment}
+        ```
+        {attachment_section}
+        {custom_fields_section}
+        
+        ## Tasks
+        
+        - [ ] Analyze root cause
+        - [ ] Implement fix
+        - [ ] Add tests
+        - [ ] Verify in staging
+        
+        <details>
+        <summary>Developer Notes</summary>
+        
+        **Branch:** `git checkout -b fix/{self.bug_key.lower()}`
+        
+        **Get AI help:** Comment with `@github-copilot` + your question
+        
+        *Synced from Jira • Created: {created} • Updated: {updated}*
+        
+        </details>
+        """)
+        
+        # Prepare API request
+        | **Issue Type** | {bug_type} |
+        | **Priority** | {priority} |
+        | **Current Status** | {status} |
+        | **Reported By** | {reporter} |
+        | **Assigned To** | {assignee} |
+        | **Created On** | {created} |
+        | **Last Updated** | {updated} |
+        | **Affected Components** | {components_text} |
+        | **Tags** | {labels_text} |
         | **Affected Version(s)** | {versions_text} |
-        | **Fix Version(s)** | {fix_versions_text} |
+        | **Target Fix Version(s)** | {fix_versions_text} |
         
         ---
         
-        ## 📝 Description
+        ## 🎯 Problem Statement
         
         {description}
         
         ---
         
-        ## 🌍 Environment
+        ## 🌍 Environment Details
         
         {environment}
         
@@ -361,25 +398,73 @@ class JiraGitHubProcessor:
         {attachment_section}
         {custom_fields_section}
         
-        ## 🔄 Next Steps
+        ## � Analysis & Solution Request
         
-        - [ ] Review the bug details and attachments
-        - [ ] Reproduce the issue in the specified environment
-        - [ ] Investigate root cause
-        - [ ] Implement fix and add tests
-        - [ ] Update Jira ticket with resolution
+        **@github-copilot** Based on the bug description, environment, and attachments above:
+        
+        ### 1. Root Cause Analysis
+        - What is likely causing this issue?
+        - Which component/module is affected?
+        - Are there any known patterns or similar issues?
+        
+        ### 2. Proposed Solution
+        - What changes are needed to fix this bug?
+        - Which files need to be modified?
+        - What is the recommended approach?
+        
+        ### 3. Implementation Steps
+        - [ ] Identify affected code sections
+        - [ ] Reproduce the issue locally
+        - [ ] Implement the fix
+        - [ ] Add/update unit tests
+        - [ ] Add/update integration tests
+        - [ ] Verify fix in staging environment
+        - [ ] Update documentation if needed
+        
+        ### 4. Testing Strategy
+        - What test cases should be added?
+        - How to verify the fix works?
+        - What edge cases should be considered?
+        
+        ### 5. Risk Assessment
+        - What are potential side effects?
+        - Which areas might be impacted?
+        - Is this a breaking change?
+        
+        ---
+        
+        ## 🔧 For Developers
+        
+        **Quick Start:**
+        ```bash
+        # Checkout and create branch
+        git checkout -b fix/{self.bug_key.lower()}
+        
+        # Review the Jira ticket for more context
+        # {CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key}
+        ```
+        
+        **Need Help?**
+        - 💬 Comment with `@github-copilot` followed by your question
+        - 📎 Review attachments above for screenshots/logs
+        - 🔗 Check the original Jira ticket for additional comments
         
         ---
         
         <details>
-        <summary>📊 Metadata</summary>
+        <summary>📊 Integration Metadata</summary>
         
-        - **Integration Type:** Zero-Cost Python Integration 🐍
-        - **Sync Time:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC
+        - **Sync Method:** Zero-Cost Python Integration 🐍
+        - **Synced At:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC
         - **Jira Project:** {self.bug_data.get('key', '').split('-')[0] if self.bug_data.get('key') else 'Unknown'}
         - **Automation:** GitHub Actions Workflow
+        - **Issue Auto-Created:** Yes
         
         </details>
+        
+        ---
+        
+        **👉 Ready to fix this bug? Mention `@github-copilot` in comments to get AI assistance throughout the process!**
         """)
         
         # Prepare API request
@@ -406,8 +491,9 @@ class JiraGitHubProcessor:
         issue_data = {
             'title': f"[{self.bug_key}] {fields['summary']}",
             'body': issue_body,
-            'labels': issue_labels,
-            'assignees': ['hrutvipujar-sudo']  # Assign to GitHub Copilot
+            'labels': issue_labels
+            # Note: Assignees must be repository collaborators
+            # Add 'assignees': ['username'] if you want to assign to specific users
         }
         
         request = urllib.request.Request(
@@ -575,6 +661,5 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
 
 
