@@ -333,11 +333,14 @@ class JiraGitHubProcessor:
         | Field | Value |
         |-------|-------|
         | **Jira** | [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key}) |
-        | **Priority** | {priority} • **Status** | {status} |
-        | **Reporter** | {reporter} • **Assignee** | {assignee} |
+        | **Priority** | {priority} |
+        | **Status** | {status} |
+        | **Reporter** | {reporter} |
+        | **Assignee** | {assignee} |
         | **Components** | {components_text} |
         | **Labels** | {labels_text} |
-        | **Versions** | {versions_text} → {fix_versions_text} |
+        | **Affected Versions** | {versions_text} |
+        | **Fix Versions** | {fix_versions_text} |
         
         ## Description
         
