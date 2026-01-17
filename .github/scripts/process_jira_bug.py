@@ -12,8 +12,10 @@ import urllib.error
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
-from textwrap import dedent
 import time
+
+# Import the issue body generator
+from issue_generator import IssueBodyGenerator
 
 # Configuration from GitHub Secrets
 CONFIG = {
@@ -269,108 +271,15 @@ class JiraGitHubProcessor:
         
         fields = self.bug_data['fields']
         
-        # Extract key fields
+        # Use the issue generator to create the body
+        generator = IssueBodyGenerator()
+        issue_body = generator.generate(self.bug_data, CONFIG, self.attachments)
+        
+        # Extract fields for labels
         bug_type = fields.get('issuetype', {}).get('name', 'Bug')
         priority = fields.get('priority', {}).get('name', 'Medium')
-        status = fields.get('status', {}).get('name', 'Unknown')
-        reporter = fields.get('reporter', {}).get('displayName', 'Unknown')
-        assignee_field = fields.get('assignee')
-        assignee = assignee_field.get('displayName', 'Unassigned') if assignee_field else 'Unassigned'
-        created = fields.get('created', 'Unknown')
-        updated = fields.get('updated', 'Unknown')
-        
-        # Get description safely
-        description = fields.get('description', '')
-        if isinstance(description, dict):
-            description = self._extract_text_from_adf(description)
-        elif description is None:
-            description = 'No description provided'
-            
-        # Build components section
         components = [c['name'] for c in fields.get('components', [])]
-        components_text = ', '.join(components) if components else 'None'
-        
-        # Build labels section
         labels = fields.get('labels', [])
-        labels_text = ', '.join(f'`{label}`' for label in labels) if labels else 'None'
-        
-        # Build affected versions
-        affected_versions = [v['name'] for v in fields.get('versions', [])]
-        versions_text = ', '.join(affected_versions) if affected_versions else 'Not specified'
-        
-        # Build fix versions
-        fix_versions = [v['name'] for v in fields.get('fixVersions', [])]
-        fix_versions_text = ', '.join(fix_versions) if fix_versions else 'Not specified'
-        
-        # Build environment info
-        environment = fields.get('environment', '')
-        if isinstance(environment, dict):
-            environment = self._extract_text_from_adf(environment)
-        elif not environment:
-            environment = 'Not specified'
-        
-        # Build attachment section with visual formatting
-        attachment_section = ""
-        if self.attachments:
-            attachment_section = "\n## 📎 Attachments\n\n"
-            for att in self.attachments:
-                size_kb = att['size'] / 1024
-                file_icon = self._get_file_icon(att['filename'])
-                if att['github_url']:
-                    attachment_section += f"- {file_icon} **[{att['filename']}]({att['github_url']})** - {size_kb:.2f} KB\n"
-                else:
-                    attachment_section += f"- {file_icon} **{att['filename']}** - {size_kb:.2f} KB ⚠️ *Upload failed*\n"
-        
-        # Build custom fields section if any
-        custom_fields_section = self._build_custom_fields_section(fields)
-        
-        # Create comprehensive issue body optimized as a prompt for GitHub Copilot
-        issue_body = dedent(f"""\
-        # {bug_type}: {fields['summary']}
-        
-        > 💡 **@github-copilot** Help me understand and fix this issue
-        
-        | Field | Value |
-        |-------|-------|
-        | **Jira** | [{self.bug_key}]({CONFIG['JIRA_BASE_URL']}/browse/{self.bug_key}) |
-        | **Priority** | {priority} |
-        | **Status** | {status} |
-        | **Reporter** | {reporter} |
-        | **Assignee** | {assignee} |
-        | **Components** | {components_text} |
-        | **Labels** | {labels_text} |
-        | **Affected Versions** | {versions_text} |
-        | **Fix Versions** | {fix_versions_text} |
-        
-        ## Description
-        
-        {description}
-        
-        **Environment:**
-        ```
-        {environment}
-        ```
-        {attachment_section}
-        {custom_fields_section}
-        
-        ## Tasks
-        
-        - [ ] Analyze root cause
-        - [ ] Implement fix
-        - [ ] Add tests
-        - [ ] Verify in staging
-        
-        <details>
-        <summary>Developer Notes</summary>
-        
-        **Branch:** `git checkout -b fix/{self.bug_key.lower()}`
-        
-        **Get AI help:** Comment with `@github-copilot` + your question
-        
-        *Synced from Jira • Created: {created} • Updated: {updated}*
-        
-        </details>
-        """)
         
         # Prepare API request
         owner, repo = CONFIG['GITHUB_REPOSITORY'].split('/')
@@ -397,8 +306,6 @@ class JiraGitHubProcessor:
             'title': f"[{self.bug_key}] {fields['summary']}",
             'body': issue_body,
             'labels': issue_labels
-            # Note: Assignees must be repository collaborators
-            # Add 'assignees': ['username'] if you want to assign to specific users
         }
         
         request = urllib.request.Request(
@@ -423,63 +330,6 @@ class JiraGitHubProcessor:
             print(f"   Response: {e.read().decode('utf-8')}")
             raise
     
-    def _extract_text_from_adf(self, adf_doc):
-        """Extract plain text from Atlassian Document Format"""
-        if not isinstance(adf_doc, dict):
-            return str(adf_doc)
-        
-        text_parts = []
-        
-        def extract_content(node):
-            if isinstance(node, dict):
-                if node.get('type') == 'text':
-                    text_parts.append(node.get('text', ''))
-                if 'content' in node:
-                    for child in node['content']:
-                        extract_content(child)
-            elif isinstance(node, list):
-                for item in node:
-                    extract_content(item)
-        
-        extract_content(adf_doc)
-        return '\n'.join(text_parts) if text_parts else 'No description provided'
-    
-    def _get_file_icon(self, filename):
-        """Get emoji icon based on file extension"""
-        ext = filename.lower().split('.')[-1] if '.' in filename else ''
-        icons = {
-            'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🖼️', 'svg': '🖼️',
-            'pdf': '📄', 'doc': '📄', 'docx': '📄', 'txt': '📄',
-            'zip': '📦', 'tar': '📦', 'gz': '📦', 'rar': '📦',
-            'log': '📝', 'json': '📋', 'xml': '📋', 'yaml': '📋', 'yml': '📋',
-            'mp4': '🎥', 'avi': '🎥', 'mov': '🎥',
-            'mp3': '🎵', 'wav': '🎵',
-        }
-        return icons.get(ext, '📎')
-    
-    def _build_custom_fields_section(self, fields):
-        """Build section for custom fields if they exist"""
-        custom_fields = []
-        
-        # Look for common custom fields
-        for key, value in fields.items():
-            if key.startswith('customfield_') and value:
-                # Try to extract meaningful data
-                if isinstance(value, dict):
-                    if 'value' in value:
-                        custom_fields.append(f"- **{key}**: {value['value']}")
-                    elif 'name' in value:
-                        custom_fields.append(f"- **{key}**: {value['name']}")
-                elif isinstance(value, list) and value:
-                    items = ', '.join([str(item.get('value', item)) if isinstance(item, dict) else str(item) for item in value])
-                    custom_fields.append(f"- **{key}**: {items}")
-                elif isinstance(value, (str, int, float, bool)):
-                    custom_fields.append(f"- **{key}**: {value}")
-        
-        if custom_fields:
-            return "\n## 🔧 Custom Fields\n\n" + '\n'.join(custom_fields) + "\n\n---\n"
-        return ""
-
     def update_jira(self):
         """Add comment to Jira with GitHub issue link"""
         print("🔗 Updating Jira with GitHub link...")
