@@ -4,7 +4,6 @@ Handles formatting and template rendering for GitHub issues
 """
 
 from pathlib import Path
-from textwrap import dedent
 
 
 class IssueBodyGenerator:
@@ -25,55 +24,9 @@ class IssueBodyGenerator:
             with open(self.template_path, 'r', encoding='utf-8') as f:
                 return f.read()
         except FileNotFoundError:
-            print(f"⚠️  Template not found: {self.template_path}")
-            print("   Using default inline template")
-            return self._get_default_template()
-    
-    def _get_default_template(self):
-        """Fallback inline template"""
-        return dedent("""\
-        ## � Jira Reference
-        [{bug_key}]({jira_url}) • {priority} Priority • Status: {status}
-        
-        ## 📋 Issue Details
-        
-        **Reporter:** {reporter}  
-        **Assignee:** {assignee}  
-        **Components:** {components}  
-        **Labels:** {labels}  
-        **Affected Versions:** {versions}  
-        **Fix Versions:** {fix_versions}
-        
-        ## 📝 Description
-        
-        {description}
-        
-        ## 🖥️ Environment
-        
-        ```
-        {environment}
-        ```
-        
-        {attachments_section}
-        
-        {custom_fields_section}
-        
-        ---
-        
-        ## 🤖 @github-copilot 
-        
-        Please help analyze and fix this issue:
-        
-        1. **Root Cause**: What is causing this problem based on the description and environment?
-        2. **Solution**: What code changes are needed to fix it?
-        3. **Files**: Which files should be modified?
-        4. **Testing**: How can we verify the fix works?
-        5. **Risks**: Are there any potential side effects or breaking changes?
-        
-        ---
-        
-        <sub>📅 Created: {created} • Updated: {updated} • Synced from Jira</sub>
-        """)
+            print(f"❌ ERROR: Template not found: {self.template_path}")
+            print(f"   Please ensure the template file exists in the templates folder.")
+            raise SystemExit(1)
     
     def generate(self, jira_data, config, attachments=None):
         """
