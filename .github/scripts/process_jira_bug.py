@@ -305,7 +305,8 @@ class JiraGitHubProcessor:
         issue_data = {
             'title': f"[{self.bug_key}] {fields['summary']}",
             'body': issue_body,
-            'labels': issue_labels
+            'labels': issue_labels,
+            'assignees': ['copilot-swe-agent']
         }
         
         request = urllib.request.Request(
@@ -416,3 +417,4 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
