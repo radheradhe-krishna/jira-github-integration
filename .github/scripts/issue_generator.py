@@ -53,7 +53,7 @@ class IssueBodyGenerator:
         # Handle assignee safely
         assignee_field = fields.get('assignee')
         # assignee = assignee_field.get('displayName', 'Unassigned') if assignee_field else 'Unassigned'
-        assignee = 'copilot-swe-agent';
+        assignee = ['copilot-swe-agent'];
         created = fields.get('created', 'Unknown')
         updated = fields.get('updated', 'Unknown')
         
