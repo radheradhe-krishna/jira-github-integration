@@ -306,7 +306,7 @@ class JiraGitHubProcessor:
             'title': f"[{self.bug_key}] {fields['summary']}",
             'body': issue_body,
             'labels': issue_labels,
-            'assignees': ['hrutvipujar-sudo']  # Assign to GitHub Copilot
+            'assignees': ['copilot-swe-agent']  # Assign to GitHub Copilot hrutvipujar-sudo
         }
         
         request = urllib.request.Request(
@@ -417,5 +417,6 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 
