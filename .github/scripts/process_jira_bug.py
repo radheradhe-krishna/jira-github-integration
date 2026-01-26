@@ -343,7 +343,7 @@ class JiraGitHubProcessor:
         
         # Assign with optional agent assignment parameters
         assignee_data = {
-            'assignees': ['Copilot']
+            'assignees': ['copilot-swe-agent']
         }
         
         request = urllib.request.Request(
@@ -452,6 +452,7 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 
 
