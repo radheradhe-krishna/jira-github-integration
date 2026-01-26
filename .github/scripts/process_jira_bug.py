@@ -60,7 +60,7 @@ class JiraGitHubProcessor:
             self.create_github_issue()
 
             # Step 5: Assign Copilot to the issue
-            # self.assign_copilot_to_issue()
+            self.assign_copilot_to_issue()
 
             # Step 6: Update Jira with GitHub link
             self.update_jira()
@@ -309,7 +309,7 @@ class JiraGitHubProcessor:
             'title': f"[{self.bug_key}] {fields['summary']}",
             'body': issue_body,
             'labels': issue_labels,
-            'assignees': ['copilot-swe-agent']  # Assign to GitHub Copilot hrutvipujar-sudo
+            # 'assignees': ['copilot-swe-agent']  # Assign to GitHub Copilot hrutvipujar-sudo
         }
         
         request = urllib.request.Request(
@@ -455,4 +455,5 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
