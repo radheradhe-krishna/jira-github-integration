@@ -334,40 +334,40 @@ class JiraGitHubProcessor:
             print(f"   Response: {e.read().decode('utf-8')}")
             raise
 
-    def assign_copilot_to_issue(self):
-    """Assign GitHub Copilot to the created issue"""
-    print("🤖 Assigning Copilot to the issue...")
-    
-    owner, repo = CONFIG['GITHUB_REPOSITORY'].split('/')
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/{self.github_issue_number}/assignees"
-    
-    # Assign with optional agent assignment parameters
-    assignee_data = {
-        'assignees': ['copilot-swe-agent'],
-        'target_repo': f"{owner}/{repo}",
-        'base_branch': 'main',  # or your default branch
-        'custom_instructions': 'Please analyze and fix this Jira bug'
-    }
-    
-    request = urllib.request.Request(
-        url,
-        data=json.dumps(assignee_data).encode('utf-8'),
-        method='POST'
-    )
-    request.add_header('Authorization', f"Bearer {CONFIG['GITHUB_TOKEN']}")
-    request.add_header('Accept', 'application/vnd.github+json')
-    request.add_header('Content-Type', 'application/json')
-    request.add_header('X-GitHub-Api-Version', '2022-11-28')
-    
-    try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            print(f"✅ Assigned Copilot to issue #{self.github_issue_number}")
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8')
-        print(f"⚠️  Failed to assign Copilot: {e.code} - {e.reason}")
-        print(f"   Response: {error_body}")
-        # Don't raise - this is optional
+        def assign_copilot_to_issue(self):
+        """Assign GitHub Copilot to the created issue"""
+        print("🤖 Assigning Copilot to the issue...")
+        
+        owner, repo = CONFIG['GITHUB_REPOSITORY'].split('/')
+        url = f"https://api.github.com/repos/{owner}/{repo}/issues/{self.github_issue_number}/assignees"
+        
+        # Assign with optional agent assignment parameters
+        assignee_data = {
+            'assignees': ['copilot-swe-agent'],
+            'target_repo': f"{owner}/{repo}",
+            'base_branch': 'main',  # or your default branch
+            'custom_instructions': 'Please analyze and fix this Jira bug'
+        }
+        
+        request = urllib.request.Request(
+            url,
+            data=json.dumps(assignee_data).encode('utf-8'),
+            method='POST'
+        )
+        request.add_header('Authorization', f"Bearer {CONFIG['GITHUB_TOKEN']}")
+        request.add_header('Accept', 'application/vnd.github+json')
+        request.add_header('Content-Type', 'application/json')
+        request.add_header('X-GitHub-Api-Version', '2022-11-28')
+        
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                result = json.loads(response.read().decode('utf-8'))
+                print(f"✅ Assigned Copilot to issue #{self.github_issue_number}")
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode('utf-8')
+            print(f"⚠️  Failed to assign Copilot: {e.code} - {e.reason}")
+            print(f"   Response: {error_body}")
+            # Don't raise - this is optional
     
     def update_jira(self):
         """Add comment to Jira with GitHub issue link"""
@@ -455,6 +455,7 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 
 
