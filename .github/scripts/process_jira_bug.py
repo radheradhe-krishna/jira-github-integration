@@ -339,36 +339,31 @@ class JiraGitHubProcessor:
         print("🤖 Assigning Copilot to the issue...")
         
         owner, repo = CONFIG['GITHUB_REPOSITORY'].split('/')
-        # Use the special agent_assignments API (not the standard assignees API)
-        url = f"https://github.com/{owner}/{repo}/issues/agent_assignments"
+        url = f"https://api.github.com/repos/{owner}/{repo}/issues/{self.github_issue_number}/assignees"
         
-        # Agent assignment data - similar to what the UI sends
-        assignment_data = {
-            'issue_ids': [self.github_issue_number],
-            'repo_name_with_owner': f"{owner}/{repo}",
-            'base_ref': 'main',
-            'custom_instructions': ''
+        # Assign with optional agent assignment parameters
+        assignee_data = {
+            'assignees': ['copilot-swe-agent']
         }
         
         request = urllib.request.Request(
             url,
-            data=json.dumps(assignment_data).encode('utf-8'),
+            data=json.dumps(assignee_data).encode('utf-8'),
             method='POST'
         )
         request.add_header('Authorization', f"Bearer {CONFIG['GITHUB_TOKEN']}")
-        request.add_header('Accept', 'application/json')
+        request.add_header('Accept', 'application/vnd.github+json')
         request.add_header('Content-Type', 'application/json')
+        request.add_header('X-GitHub-Api-Version', '2022-11-28')
         
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
                 result = json.loads(response.read().decode('utf-8'))
-                print(f"✅ Assigned Copilot agent to issue #{self.github_issue_number}")
-                print(f"   Response: {result}")
+                print(f"✅ Assigned Copilot to issue #{self.github_issue_number}")
         except urllib.error.HTTPError as e:
             error_body = e.read().decode('utf-8')
-            print(f"⚠️  Failed to assign Copilot agent: {e.code} - {e.reason}")
+            print(f"⚠️  Failed to assign Copilot: {e.code} - {e.reason}")
             print(f"   Response: {error_body}")
-            print(f"   Note: This requires GitHub Copilot agent feature to be enabled")
             # Don't raise - this is optional
     
     def update_jira(self):
