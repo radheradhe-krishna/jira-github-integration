@@ -343,10 +343,7 @@ class JiraGitHubProcessor:
         
         # Assign with optional agent assignment parameters
         assignee_data = {
-            'assignees': ['copilot-swe-agent'],
-            'target_repo': f"{owner}/{repo}",
-            'base_branch': 'main',  # or your default branch
-            'custom_instructions': 'Please analyze and fix this Jira bug'
+            'assignees': ['copilot','copilot-swe-agent','github-copilot','copilot-workspace']
         }
         
         request = urllib.request.Request(
@@ -455,5 +452,6 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 
