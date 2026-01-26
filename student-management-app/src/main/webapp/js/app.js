@@ -17,7 +17,7 @@ function setupEventListeners() {
     // Search on Enter key
     searchInput.addEventListener('keypress', function(e) {
         // Prevent numeric characters (0-9)
-        if (/[0-9]/.test(e.key)) {
+        if (/^\d$/.test(e.key)) {
             e.preventDefault();
         }
         
@@ -30,7 +30,7 @@ function setupEventListeners() {
     searchInput.addEventListener('paste', function(e) {
         e.preventDefault();
         const pasteData = e.clipboardData.getData('text');
-        const filteredData = pasteData.replace(/[0-9]/g, '');
+        const filteredData = pasteData.replace(/\d/g, '');
         const start = searchInput.selectionStart;
         const end = searchInput.selectionEnd;
         const currentValue = searchInput.value;
