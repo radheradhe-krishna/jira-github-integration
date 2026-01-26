@@ -333,8 +333,8 @@ class JiraGitHubProcessor:
             print(f"❌ Failed to create GitHub issue: {e.code} - {e.reason}")
             print(f"   Response: {e.read().decode('utf-8')}")
             raise
-
-        def assign_copilot_to_issue(self):
+    
+    def assign_copilot_to_issue(self):
         """Assign GitHub Copilot to the created issue"""
         print("🤖 Assigning Copilot to the issue...")
         
@@ -455,7 +455,6 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
 
 
 
