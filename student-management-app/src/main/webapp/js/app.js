@@ -12,10 +12,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup event listeners
 function setupEventListeners() {
+    const searchInput = document.getElementById('searchInput');
+    
     // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    searchInput.addEventListener('keypress', function(e) {
+        // Prevent numeric characters (0-9)
+        if (/[0-9]/.test(e.key)) {
+            e.preventDefault();
+            return false;
+        }
+        
         if (e.key === 'Enter') {
             searchStudents();
+        }
+    });
+    
+    // Prevent pasting numbers
+    searchInput.addEventListener('paste', function(e) {
+        const pasteData = e.clipboardData.getData('text');
+        if (/[0-9]/.test(pasteData)) {
+            e.preventDefault();
+            return false;
         }
     });
 
