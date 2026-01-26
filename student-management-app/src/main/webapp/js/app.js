@@ -19,7 +19,6 @@ function setupEventListeners() {
         // Prevent numeric characters (0-9)
         if (/[0-9]/.test(e.key)) {
             e.preventDefault();
-            return false;
         }
         
         if (e.key === 'Enter') {
@@ -27,13 +26,16 @@ function setupEventListeners() {
         }
     });
     
-    // Prevent pasting numbers
+    // Filter out numbers from pasted text
     searchInput.addEventListener('paste', function(e) {
+        e.preventDefault();
         const pasteData = e.clipboardData.getData('text');
-        if (/[0-9]/.test(pasteData)) {
-            e.preventDefault();
-            return false;
-        }
+        const filteredData = pasteData.replace(/[0-9]/g, '');
+        const start = searchInput.selectionStart;
+        const end = searchInput.selectionEnd;
+        const currentValue = searchInput.value;
+        searchInput.value = currentValue.substring(0, start) + filteredData + currentValue.substring(end);
+        searchInput.selectionStart = searchInput.selectionEnd = start + filteredData.length;
     });
 
     // Close modal when clicking outside
