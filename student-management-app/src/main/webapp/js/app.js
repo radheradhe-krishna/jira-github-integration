@@ -16,14 +16,11 @@ function setupEventListeners() {
     
     // Prevent numeric input in search box
     searchInput.addEventListener('keydown', function(e) {
-        // Allow special keys (backspace, delete, arrow keys, tab, etc.)
-        const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
+        // Check if it's a numeric key (0-9)
+        const isNumeric = e.key >= '0' && e.key <= '9';
         
-        // Check if it's a numeric key (0-9) on main keyboard or numpad
-        const isNumeric = (e.key >= '0' && e.key <= '9') || (e.code >= 'Digit0' && e.code <= 'Digit9') || (e.code >= 'Numpad0' && e.code <= 'Numpad9');
-        
-        // If it's a numeric key and not a special key, prevent it
-        if (isNumeric && !allowedKeys.includes(e.key)) {
+        // Prevent numeric input
+        if (isNumeric) {
             e.preventDefault();
         }
     });
