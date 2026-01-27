@@ -25,7 +25,7 @@ jobs:
     name: Process Jira Bug
     runs-on: ubuntu-latest
     timeout-minutes: 10
-  env:
+    env:
       GH_PAT_AGENT: ${{ secrets.GH_PAT_AGENT }}
     
     steps:
@@ -100,5 +100,3 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "✨ *Running on free GitHub Actions tier*" >> $GITHUB_STEP_SUMMARY
-
-
