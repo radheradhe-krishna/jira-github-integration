@@ -261,19 +261,29 @@ def create_issue_with_gh(
         return False
 
     cmd = ["gh", "issue", "create", "--title", title, "--body", body]
+    
+    # Add labels first (these usually work)
+    if labels:
+        for label in labels:
+            cmd += ["--label", label]
+    
+    # Try to add assignees, but create issue without them if they don't exist
+    assignee_arg = None
     if assignees:
         # ensure assignees passed to gh are comma-separated string
         if isinstance(assignees, (list, tuple)):
             assignee_arg = ",".join([str(a).strip() for a in assignees if a is not None and str(a).strip() != ""])
         else:
             assignee_arg = str(assignees).strip()
-        if assignee_arg:
-            cmd += ["--assignee", assignee_arg]
-    if labels:
-        for label in labels:
-            cmd += ["--label", label]
+    
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # Try creating with assignees first
+        if assignee_arg:
+            cmd_with_assignees = cmd + ["--assignee", assignee_arg]
+            result = subprocess.run(cmd_with_assignees, capture_output=True, text=True, check=True)
+        else:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            
         stdout = result.stdout.strip()
         print(f"Created issue via gh: {title}")
         print(stdout)
@@ -283,6 +293,23 @@ def create_issue_with_gh(
             return m.group(0)
         return True
     except subprocess.CalledProcessError as exc:
-        print(f"Failed to create issue via gh CLI: {title}")
-        print(exc.stderr.strip())
-        return False
+        # If assignment failed, try again without assignees
+        if assignee_arg and "could not assign" in exc.stderr:
+            print(f"⚠️  Warning: Could not assign to {assignee_arg}, creating issue without assignee...")
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                stdout = result.stdout.strip()
+                print(f"Created issue via gh: {title}")
+                print(stdout)
+                m = re.search(r"https?://github\.com/[^\s]+/issues/\d+", stdout)
+                if m:
+                    return m.group(0)
+                return True
+            except subprocess.CalledProcessError as retry_exc:
+                print(f"Failed to create issue via gh CLI: {title}")
+                print(retry_exc.stderr.strip())
+                return False
+        else:
+            print(f"Failed to create issue via gh CLI: {title}")
+            print(exc.stderr.strip())
+            return False
