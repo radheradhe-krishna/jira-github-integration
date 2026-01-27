@@ -9,6 +9,7 @@ import json
 import base64
 import urllib.request
 import urllib.error
+from github import Github
 from dotenv import load_dotenv
 from datetime import datetime
 from pathlib import Path
@@ -276,42 +277,52 @@ class JiraGitHubProcessor:
         jira_summary = 'Summary'
         
         """Create GitHub issue with bug details and attachment links11"""
-         print("🔨 Creating GitHub issue11...")
-         token = os.getenv("GH_PAT_AGENT")
-         repo_name = os.getenv("GITHUB_REPOSITORY")
-         print("GH_PAT_AGENT environment variable value "+ token)
-         print("GITHUB_REPOSITORY environment variable value "+ repo_name)
+        print("🔨 Creating GitHub issue11...")
+        token = os.getenv("GH_PAT_AGENT")
+        repo_name = os.getenv("GITHUB_REPOSITORY")
+        print("GH_PAT_AGENT environment variable value "+ token)
+        print("GITHUB_REPOSITORY environment variable value "+ repo_name)
         
-         if not token:
+        if not token:
             print("Error: GH_PAT_AGENT environment variable not set")
             sys.exit(1)
-         if not repo_name:
+        if not repo_name:
             print("Error: GITHUB_REPOSITORY environment variable not set")
             sys.exit(1)
         
-         gh, repo = ensure_repo(token, repo_name)
-         assignees_env = os.getenv("ASSIGNEES", "").strip()
-         assignees = [part.strip() for part in assignees_env.split(",") if part.strip()]
+        gh, repo = ensure_repo(token, repo_name)
+        assignees_env = os.getenv("ASSIGNEES", "").strip()
+        assignees = [part.strip() for part in assignees_env.split(",") if part.strip()]
     
-         # Default label for vulnerability
-         # assignees = ["hrutvipujar-sudo"] 
-         labels = ["jira-auto-fix"]
-             # Create the issue (pass repo to get an Issue object when possible)
+        # Default label for vulnerability
+        # assignees = ["hrutvipujar-sudo"] 
+        labels = ["jira-auto-fix"]
+        # Create the issue (pass repo to get an Issue object when possible)
 
-         title = f"{jira_summary} - {jira_issue_key}"
-         # Use the issue generator to create the body
-         generator = IssueBodyGenerator()
-         body = generator.generate(self.bug_data, CONFIG, self.attachments)
-         created = create_issue_with_gh(
-             title=title,
-             body=body,
-             assignees=assignees,
-             labels=labels,
-             gh_token=token,
-             repo_obj=repo,
-         )
+        title = f"{jira_summary} - {jira_issue_key}"
+        # Use the issue generator to create the body
+        generator = IssueBodyGenerator()
+        body = generator.generate(self.bug_data, CONFIG, self.attachments)
+        created = create_issue_with_gh(
+            title=title,
+            body=body,
+            assignees=assignees,
+            labels=labels,
+            gh_token=token,
+            repo_obj=repo,
+        )
           
     
+    def ensure_repo(token: str, repo_name: str):
+    try:
+        gh = Github(token)
+        repo = gh.get_repo(repo_name)
+        print(f"Connected to repository: {repo.full_name}")
+        return gh, repo
+    except Exception as exc:
+        print(f"Error connecting to GitHub: {exc}")
+        sys.exit(1)
+
     def create_github_issue(self):
         """Create GitHub issue with bug details and attachment links"""
         print("🔨 Creating GitHub issue...")
@@ -496,5 +507,4 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
 
