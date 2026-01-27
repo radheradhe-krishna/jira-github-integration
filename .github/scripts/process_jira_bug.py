@@ -63,7 +63,7 @@ class JiraGitHubProcessor:
             self.create_github_issue11()
 
             # Step 5: Assign Copilot to the issue
-            self.assign_copilot_to_issue()
+            # self.assign_copilot_to_issue()
 
             # Step 6: Update Jira with GitHub link
             self.update_jira()
@@ -507,5 +507,6 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 
