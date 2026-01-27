@@ -4,6 +4,7 @@ Handles formatting and template rendering for GitHub issues
 """
 import subprocess
 from pathlib import Path
+from typing import List, Sequence, Optional, Union
 
 
 class IssueBodyGenerator:
