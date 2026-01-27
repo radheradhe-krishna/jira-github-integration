@@ -290,7 +290,7 @@ class JiraGitHubProcessor:
             print("Error: GITHUB_REPOSITORY environment variable not set")
             sys.exit(1)
         
-        gh, repo = ensure_repo(token, repo_name)
+        gh, repo = self.ensure_repo(token, repo_name)
         assignees_env = os.getenv("ASSIGNEES", "").strip()
         assignees = [part.strip() for part in assignees_env.split(",") if part.strip()]
     
@@ -313,15 +313,15 @@ class JiraGitHubProcessor:
         )
           
     
-    def ensure_repo(token: str, repo_name: str):
-    try:
-        gh = Github(token)
-        repo = gh.get_repo(repo_name)
-        print(f"Connected to repository: {repo.full_name}")
-        return gh, repo
-    except Exception as exc:
-        print(f"Error connecting to GitHub: {exc}")
-        sys.exit(1)
+    def ensure_repo(self, token: str, repo_name: str):
+        try:
+            gh = Github(token)
+            repo = gh.get_repo(repo_name)
+            print(f"Connected to repository: {repo.full_name}")
+            return gh, repo
+        except Exception as exc:
+            print(f"Error connecting to GitHub: {exc}")
+            sys.exit(1)
 
     def create_github_issue(self):
         """Create GitHub issue with bug details and attachment links"""
