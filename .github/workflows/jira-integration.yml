@@ -27,6 +27,7 @@ jobs:
     timeout-minutes: 10
     env:
       GH_PAT_AGENT: ${{ secrets.GH_PAT_AGENT }}
+      ASSIGNEES: "copilot-swe-agent"
     
     steps:
       - name: 📥 Checkout Repository
@@ -100,3 +101,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "✨ *Running on free GitHub Actions tier*" >> $GITHUB_STEP_SUMMARY
+
