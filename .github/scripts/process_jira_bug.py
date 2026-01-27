@@ -9,6 +9,7 @@ import json
 import base64
 import urllib.request
 import urllib.error
+from dotenv import load_dotenv
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
@@ -57,7 +58,8 @@ class JiraGitHubProcessor:
                 self.upload_to_github_release()
             
             # Step 4: Create GitHub issue
-            self.create_github_issue()
+            # self.create_github_issue()
+            self.create_github_issue11()
 
             # Step 5: Assign Copilot to the issue
             self.assign_copilot_to_issue()
@@ -268,6 +270,48 @@ class JiraGitHubProcessor:
         except Exception as e:
             print(f"   ⚠️  Unexpected error uploading {attachment['filename']}: {str(e)}")
 
+    def create_github_issue11(self):
+        load_dotenv()
+        jira_issue_key = 'Bug'
+        jira_summary = 'Summary'
+        
+        """Create GitHub issue with bug details and attachment links11"""
+         print("🔨 Creating GitHub issue11...")
+         token = os.getenv("GH_PAT_AGENT")
+         repo_name = os.getenv("GITHUB_REPOSITORY")
+         print("GH_PAT_AGENT environment variable value "+ token)
+         print("GITHUB_REPOSITORY environment variable value "+ repo_name)
+        
+         if not token:
+            print("Error: GH_PAT_AGENT environment variable not set")
+            sys.exit(1)
+         if not repo_name:
+            print("Error: GITHUB_REPOSITORY environment variable not set")
+            sys.exit(1)
+        
+         gh, repo = ensure_repo(token, repo_name)
+         assignees_env = os.getenv("ASSIGNEES", "").strip()
+         assignees = [part.strip() for part in assignees_env.split(",") if part.strip()]
+    
+         # Default label for vulnerability
+         # assignees = ["hrutvipujar-sudo"] 
+         labels = ["jira-auto-fix"]
+             # Create the issue (pass repo to get an Issue object when possible)
+
+         title = f"{jira_summary} - {jira_issue_key}"
+         # Use the issue generator to create the body
+         generator = IssueBodyGenerator()
+         body = generator.generate(self.bug_data, CONFIG, self.attachments)
+         created = create_issue_with_gh(
+             title=title,
+             body=body,
+             assignees=assignees,
+             labels=labels,
+             gh_token=token,
+             repo_obj=repo,
+         )
+          
+    
     def create_github_issue(self):
         """Create GitHub issue with bug details and attachment links"""
         print("🔨 Creating GitHub issue...")
@@ -452,4 +496,5 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
