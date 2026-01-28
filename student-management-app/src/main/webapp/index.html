@@ -29,6 +29,8 @@
           type="text"
           id="searchInput"
           placeholder="Search students by name..."
+          pattern="\D*"
+          title="Numbers are not allowed in search"
         />
         <button onclick="searchStudents()" class="btn btn-primary">
           Search
