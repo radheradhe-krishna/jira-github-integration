@@ -63,7 +63,7 @@ class JiraGitHubProcessor:
             self.create_github_issue11()
 
             # Step 5: Assign Copilot to the issue
-            # self.assign_copilot_to_issue()
+            self.assign_copilot_to_issue()
 
             # Step 6: Update Jira with GitHub link
             self.update_jira()
@@ -291,11 +291,11 @@ class JiraGitHubProcessor:
             sys.exit(1)
         
         gh, repo = self.ensure_repo(token, repo_name)
-        assignees_env = os.getenv("ASSIGNEES", "").strip()
-        assignees = [part.strip() for part in assignees_env.split(",") if part.strip()]
+        
+        # Don't assign programmatically - Copilot will be assigned by GitHub Actions workflow
+        # or manually from the UI after issue is created
+        assignees = []  # Empty - let GitHub Actions handle assignment
     
-        # Default label for vulnerability
-        # assignees = ["hrutvipujar-sudo"] 
         labels = ["jira-auto-fix"]
         # Create the issue (pass repo to get an Issue object when possible)
 
@@ -311,6 +311,23 @@ class JiraGitHubProcessor:
             gh_token=token,
             repo_obj=repo,
         )
+        
+        # Store the created issue information
+        if created and hasattr(created, 'number'):
+            self.github_issue_number = created.number
+            self.github_issue_url = created.html_url
+            print(f"✅ Issue created: #{self.github_issue_number}")
+            print(f"   Copilot assignment will be handled by GitHub Actions workflow")
+        elif isinstance(created, str):
+            # Got URL string from CLI
+            self.github_issue_url = created
+            # Extract issue number from URL
+            import re
+            match = re.search(r'/issues/(\d+)', created)
+            if match:
+                self.github_issue_number = int(match.group(1))
+            print(f"✅ Issue created: {self.github_issue_url}")
+            print(f"   Copilot assignment will be handled by GitHub Actions workflow")
           
     
     def ensure_repo(self, token: str, repo_name: str):
@@ -507,6 +524,4 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
-
 
