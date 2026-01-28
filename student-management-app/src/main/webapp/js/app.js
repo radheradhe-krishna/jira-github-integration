@@ -12,10 +12,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
+    const searchInput = document.getElementById('searchInput');
+    
+    // Handle keypress events for Enter key and blocking numeric input
+    searchInput.addEventListener('keypress', function(e) {
+        // Check if the pressed key is a numeric character (0-9)
+        // Using simple string comparison for single character check
+        if (e.key && e.key >= '0' && e.key <= '9') {
+            e.preventDefault(); // Block the numeric input
+        } else if (e.key === 'Enter') {
             searchStudents();
+        }
+    });
+
+    // Also prevent numeric input from paste events
+    searchInput.addEventListener('input', function(e) {
+        // Remove any numeric characters from the input value
+        const newValue = this.value.replace(/[0-9]/g, '');
+        
+        if (newValue !== this.value) {
+            const cursorPosition = this.selectionStart;
+            this.value = newValue;
+            // Restore cursor position (will be at end if position is invalid)
+            this.setSelectionRange(cursorPosition, cursorPosition);
         }
     });
 
