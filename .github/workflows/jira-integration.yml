@@ -25,19 +25,26 @@ jobs:
     name: Process Jira Bug
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    permissions:
+      issues: write
+      contents: write
+      pull-requests: write
+      
     env:
       GH_PAT_AGENT: ${{ secrets.GH_PAT_AGENT }}
       ASSIGNEES: "copilot-swe-agent"
     
     steps:
-      - name: 📥 Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
       
-      - name: 🐍 Setup Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+          cache: 'pip'
+          
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -101,4 +108,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "✨ *Running on free GitHub Actions tier*" >> $GITHUB_STEP_SUMMARY
+
 
