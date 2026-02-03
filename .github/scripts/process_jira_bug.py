@@ -1,3 +1,4 @@
+
 """
 Zero-Cost Jira Bug Processor
 Runs entirely on GitHub Actions - No external servers needed!
@@ -16,8 +17,13 @@ from pathlib import Path
 from urllib.parse import quote
 import time
 
+# Add parent directory to path to import from issue_creator
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
 # Import the issue body generator
-from issue_generator import IssueBodyGenerator, create_issue_with_gh
+from issue_generator import IssueBodyGenerator
+# Import the correct github client that doesn't strip assignees
+from issue_creator.github_client import create_issue_with_gh
 
 # Configuration from GitHub Secrets
 CONFIG = {
@@ -292,9 +298,10 @@ class JiraGitHubProcessor:
         
         gh, repo = self.ensure_repo(token, repo_name)
         
-        # Don't assign programmatically - Copilot will be assigned by GitHub Actions workflow
-        # or manually from the UI after issue is created
-        assignees = []  # Empty - let GitHub Actions handle assignment
+        # Don't pass assignees during creation - will be assigned via GitHub Actions workflow step
+        # This avoids the "user not found" error that prevents issue creation
+        assignees = []
+        print("Note: Assignees will be set via GitHub Actions workflow after issue creation")
     
         labels = ["jira-auto-fix"]
         # Create the issue (pass repo to get an Issue object when possible)
