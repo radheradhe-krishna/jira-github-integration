@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 # Import the issue body generator
 from issue_generator import IssueBodyGenerator
 # Import the correct github client that doesn't strip assignees
-from issue_creator.github_client import create_issue_with_gh
+from github_client import create_issue_with_gh
 
 # Configuration from GitHub Secrets
 CONFIG = {
@@ -531,5 +531,6 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 
