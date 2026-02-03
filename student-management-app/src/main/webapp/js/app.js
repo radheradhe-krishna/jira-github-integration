@@ -68,7 +68,6 @@ function setupEventListeners() {
 }
 
 // Show warning when numeric input is blocked
-let warningTimeout;
 function showNumericInputWarning() {
     const searchInput = document.getElementById('searchInput');
     
@@ -82,7 +81,7 @@ function showNumericInputWarning() {
         ariaMessage.id = 'searchInputWarning';
         ariaMessage.setAttribute('role', 'alert');
         ariaMessage.setAttribute('aria-live', 'polite');
-        ariaMessage.style.cssText = 'position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;';
+        ariaMessage.style.cssText = 'position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;';
         document.body.appendChild(ariaMessage);
     }
     ariaMessage.textContent = 'Numeric characters are not allowed in the search field';
@@ -94,18 +93,23 @@ function showNumericInputWarning() {
         tooltip.id = 'searchInputTooltip';
         tooltip.className = 'input-tooltip';
         tooltip.textContent = 'Numbers are not allowed';
-        searchInput.parentNode.style.position = 'relative';
-        searchInput.parentNode.appendChild(tooltip);
+        
+        // Ensure parent has relative positioning via CSS class
+        const parentElement = searchInput.parentNode;
+        if (!parentElement.classList.contains('search-bar')) {
+            console.warn('Search input parent should have position: relative in CSS');
+        }
+        parentElement.appendChild(tooltip);
     }
     tooltip.style.display = 'block';
     
-    // Clear any existing timeout
-    if (warningTimeout) {
-        clearTimeout(warningTimeout);
+    // Clear any existing timeout stored on the input element
+    if (searchInput.warningTimeout) {
+        clearTimeout(searchInput.warningTimeout);
     }
     
     // Remove warning after 2 seconds
-    warningTimeout = setTimeout(function() {
+    searchInput.warningTimeout = setTimeout(function() {
         searchInput.classList.remove('input-warning');
         tooltip.style.display = 'none';
     }, 2000);
