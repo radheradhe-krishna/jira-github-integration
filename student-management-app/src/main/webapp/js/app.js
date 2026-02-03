@@ -14,17 +14,47 @@ document.addEventListener('DOMContentLoaded', function() {
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     
-    // Prevent numeric characters from being entered
+    // Prevent numeric characters from being entered via keypress
     searchInput.addEventListener('keypress', function(e) {
         // Check if the pressed key is a number (0-9)
         if (e.key >= '0' && e.key <= '9') {
             e.preventDefault(); // Prevent the numeric character from being entered
+            showNumericInputWarning();
             return;
         }
         
         // Search on Enter key
         if (e.key === 'Enter') {
             searchStudents();
+        }
+    });
+    
+    // Handle paste events to remove numeric characters
+    searchInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        const filteredText = pastedText.replace(/[0-9]/g, '');
+        
+        if (pastedText !== filteredText) {
+            showNumericInputWarning();
+        }
+        
+        // Insert the filtered text
+        const start = searchInput.selectionStart;
+        const end = searchInput.selectionEnd;
+        const currentValue = searchInput.value;
+        searchInput.value = currentValue.substring(0, start) + filteredText + currentValue.substring(end);
+        searchInput.setSelectionRange(start + filteredText.length, start + filteredText.length);
+    });
+    
+    // Additional validation on input to catch any numeric characters that slip through
+    searchInput.addEventListener('input', function(e) {
+        const originalValue = searchInput.value;
+        const filteredValue = originalValue.replace(/[0-9]/g, '');
+        
+        if (originalValue !== filteredValue) {
+            searchInput.value = filteredValue;
+            showNumericInputWarning();
         }
     });
 
@@ -35,6 +65,50 @@ function setupEventListeners() {
             closeModal();
         }
     };
+}
+
+// Show warning when numeric input is blocked
+let warningTimeout;
+function showNumericInputWarning() {
+    const searchInput = document.getElementById('searchInput');
+    
+    // Add visual feedback
+    searchInput.classList.add('input-warning');
+    
+    // Set aria-live message for screen readers
+    let ariaMessage = document.getElementById('searchInputWarning');
+    if (!ariaMessage) {
+        ariaMessage = document.createElement('div');
+        ariaMessage.id = 'searchInputWarning';
+        ariaMessage.setAttribute('role', 'alert');
+        ariaMessage.setAttribute('aria-live', 'polite');
+        ariaMessage.style.cssText = 'position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;';
+        document.body.appendChild(ariaMessage);
+    }
+    ariaMessage.textContent = 'Numeric characters are not allowed in the search field';
+    
+    // Add visible tooltip
+    let tooltip = document.getElementById('searchInputTooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'searchInputTooltip';
+        tooltip.className = 'input-tooltip';
+        tooltip.textContent = 'Numbers are not allowed';
+        searchInput.parentNode.style.position = 'relative';
+        searchInput.parentNode.appendChild(tooltip);
+    }
+    tooltip.style.display = 'block';
+    
+    // Clear any existing timeout
+    if (warningTimeout) {
+        clearTimeout(warningTimeout);
+    }
+    
+    // Remove warning after 2 seconds
+    warningTimeout = setTimeout(function() {
+        searchInput.classList.remove('input-warning');
+        tooltip.style.display = 'none';
+    }, 2000);
 }
 
 // Load all students

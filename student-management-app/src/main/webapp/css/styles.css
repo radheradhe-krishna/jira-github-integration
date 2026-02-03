@@ -350,3 +350,39 @@ footer {
         padding: 10px;
     }
 }
+
+/* Input warning styles */
+.input-warning {
+    border-color: #f44336 !important;
+    animation: shake 0.3s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.input-tooltip {
+    position: absolute;
+    top: -35px;
+    left: 0;
+    background-color: #f44336;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.input-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20px;
+    border: 5px solid transparent;
+    border-top-color: #f44336;
+}
