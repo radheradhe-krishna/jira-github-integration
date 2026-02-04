@@ -29,6 +29,7 @@
           type="text"
           id="searchInput"
           placeholder="Search students by name..."
+          oninput="this.value = this.value.replace(/[0-9]/g, '')"
         />
         <button onclick="searchStudents()" class="btn btn-primary">
           Search
