@@ -9,8 +9,8 @@ permissions:
 
 jobs:
   cleanup:
-    # Only run if PR was merged (not just closed)
-    if: github.event.pull_request.merged == true
+    # Run if PR was merged OR closed (cleanup either way)
+    if: github.event.pull_request.merged == true || github.event.action == 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -28,7 +28,7 @@ jobs:
         run: |
           # Extract bug key from PR title or body
           PR_TITLE="${{ github.event.pull_request.title }}"
-          
+
           # Look for pattern like [BUG-123] or BUG-123
           if [[ "$PR_TITLE" =~ \[([A-Z]+-[0-9]+)\] ]] || [[ "$PR_TITLE" =~ ([A-Z]+-[0-9]+) ]]; then
             BUG_KEY="${BASH_REMATCH[1]}"
