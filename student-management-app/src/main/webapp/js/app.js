@@ -12,11 +12,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    const searchInput = document.getElementById('searchInput');
+    
+    // Prevent numeric input in search box
+    searchInput.addEventListener('keypress', function(e) {
+        // Check if the key pressed is a number (0-9)
+        if (e.key >= '0' && e.key <= '9') {
+            e.preventDefault();
+            return;
+        }
+        
+        // Search on Enter key
         if (e.key === 'Enter') {
             searchStudents();
         }
+    });
+    
+    // Also prevent pasting numbers
+    searchInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        // Remove all numeric characters from pasted text
+        const filteredText = pastedText.replace(/[0-9]/g, '');
+        // Insert the filtered text at cursor position
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        const currentValue = this.value;
+        this.value = currentValue.substring(0, start) + filteredText + currentValue.substring(end);
+        // Set cursor position after inserted text
+        this.selectionStart = this.selectionEnd = start + filteredText.length;
     });
 
     // Close modal when clicking outside
