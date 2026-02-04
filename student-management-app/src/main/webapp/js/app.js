@@ -19,7 +19,6 @@ function setupEventListeners() {
         // Check if the pressed key is a number (0-9)
         if (e.key >= '0' && e.key <= '9') {
             e.preventDefault();
-            return false;
         }
         
         // Search on Enter key
@@ -29,9 +28,20 @@ function setupEventListeners() {
     });
     
     // Also prevent numeric characters from being pasted
-    searchInput.addEventListener('input', function(e) {
-        // Remove any numeric characters from the input value
-        this.value = this.value.replace(/[0-9]/g, '');
+    searchInput.addEventListener('paste', function(e) {
+        // Get pasted data
+        const pastedData = e.clipboardData.getData('text');
+        // If pasted data contains numbers, prevent paste and insert cleaned version
+        if (/[0-9]/.test(pastedData)) {
+            e.preventDefault();
+            const cleanedData = pastedData.replace(/[0-9]/g, '');
+            // Insert cleaned text at cursor position
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.substring(0, start) + cleanedData + this.value.substring(end);
+            // Update cursor position
+            this.selectionStart = this.selectionEnd = start + cleanedData.length;
+        }
     });
 
     // Close modal when clicking outside
