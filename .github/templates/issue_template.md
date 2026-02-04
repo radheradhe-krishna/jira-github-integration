@@ -24,6 +24,17 @@
 
 Analyze this Jira bug, reproduce it, and implement a minimal, tested fix.
 
+### ⚠️ CRITICAL RULE: Surgical Edits Only
+
+**DO NOT replace entire files!** Make targeted changes to only the problematic code:
+
+- ✅ Edit specific lines/functions that need fixing
+- ✅ Preserve all existing data and structure
+- ❌ Never delete and recreate entire files
+- ❌ Never rewrite data files completely
+
+**Example:** If student ID 8 has wrong data, fix only that entry - don't regenerate all 300+ lines!
+
 ### 📍 Primary Code Location
 
 **Search in:** `brand-landscape-analyzer-app/` or `student-management-app/` folder first
@@ -59,10 +70,13 @@ Analyze this Jira bug, reproduce it, and implement a minimal, tested fix.
 **If you successfully reproduced the bug:**
 
 4. **🔧 Implement minimal fix:**
-   - Modify existing files only (no new modules unless critical)
-   - Keep changes focused on the specific issue
+   - **CRITICAL: Make surgical edits only** - modify only the broken lines
+   - DO NOT rewrite entire files or functions
+   - DO NOT replace data files completely (edit specific entries only)
+   - Keep existing code structure and formatting
    - Avoid refactoring unrelated code
    - Root cause should be clear in your implementation
+   - **Example:** For a data validation bug, fix only the validation logic, not the entire file
 
 5. **🧪 Add/update tests:**
    - Write a test that reproduces the bug (fails before fix)
@@ -147,7 +161,8 @@ Analyze this Jira bug, reproduce it, and implement a minimal, tested fix.
 - ✅ Download and analyze ALL attachments
 - ✅ Extract text from error screenshots using OCR
 - ✅ Document reproduction attempt clearly
-- ✅ Make minimal, focused changes
+- ✅ **Make surgical edits - change only the problematic code**
+- ✅ **Preserve existing file structure and formatting**
 - ✅ Add tests that verify your fix
 - ✅ Run full test suite
 - ✅ Create properly named branch
@@ -156,11 +171,13 @@ Analyze this Jira bug, reproduce it, and implement a minimal, tested fix.
 
 ## ❌ DON'T:
 
+- ❌ **Replace entire files when only a few lines need fixing**
+- ❌ **Rewrite data files completely - edit specific entries only**
 - ❌ Create PR if bug cannot be reproduced (comment instead)
 - ❌ Add new top-level modules without strong justification
 - ❌ Modify `.gitignore` or unrelated config files
 - ❌ Add excessive comments (only for non-obvious logic)
-- ❌ Refactor unrelated code
+- ❌ Refactor unrelated code or reformat files
 - ❌ Skip test validation
 - ❌ Make assumptions without documenting them
 
