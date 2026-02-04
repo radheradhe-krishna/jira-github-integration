@@ -19,7 +19,6 @@ function setupEventListeners() {
         // Check if the key is a number (0-9)
         if (e.key >= '0' && e.key <= '9') {
             e.preventDefault();
-            return false;
         }
         
         // Search on Enter key
@@ -30,11 +29,18 @@ function setupEventListeners() {
 
     // Also prevent pasting numbers
     searchInput.addEventListener('paste', function(e) {
-        // Allow the paste to happen first
-        setTimeout(function() {
-            // Remove any numeric characters from the input
-            searchInput.value = searchInput.value.replace(/[0-9]/g, '');
-        }, 0);
+        e.preventDefault();
+        // Get clipboard data and remove numeric characters
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+        const filteredData = pasteData.replace(/[0-9]/g, '');
+        // Insert the filtered text at cursor position
+        const start = searchInput.selectionStart;
+        const end = searchInput.selectionEnd;
+        const currentValue = searchInput.value;
+        searchInput.value = currentValue.substring(0, start) + filteredData + currentValue.substring(end);
+        // Set cursor position after the inserted text
+        const newCursorPos = start + filteredData.length;
+        searchInput.setSelectionRange(newCursorPos, newCursorPos);
     });
 
     // Close modal when clicking outside
