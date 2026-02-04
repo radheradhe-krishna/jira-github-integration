@@ -1,4 +1,3 @@
-
 """
 Zero-Cost Jira Bug Processor
 Runs entirely on GitHub Actions - No external servers needed!
@@ -17,13 +16,8 @@ from pathlib import Path
 from urllib.parse import quote
 import time
 
-# Add parent directory to path to import from issue_creator
-# sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-
 # Import the issue body generator
-from issue_generator import IssueBodyGenerator
-# Import the correct github client that doesn't strip assignees
-from github_client import create_issue_with_gh
+from issue_generator import IssueBodyGenerator, create_issue_with_gh
 
 # Configuration from GitHub Secrets
 CONFIG = {
@@ -279,11 +273,9 @@ class JiraGitHubProcessor:
 
     def create_github_issue11(self):
         load_dotenv()
-        jira_issue_key = 'Bug'
-        jira_summary = 'Summary'
         
-        """Create GitHub issue with bug details and attachment links11"""
-        print("🔨 Creating GitHub issue11...")
+        """Create GitHub issue with bug details and attachment links"""
+        print("🔨 Creating GitHub issue...")
         token = os.getenv("GH_PAT_AGENT")
         repo_name = os.getenv("GITHUB_REPOSITORY")
         print("GH_PAT_AGENT environment variable value "+ token)
@@ -298,15 +290,19 @@ class JiraGitHubProcessor:
         
         gh, repo = self.ensure_repo(token, repo_name)
         
-        # Don't pass assignees during creation - will be assigned via GitHub Actions workflow step
-        # This avoids the "user not found" error that prevents issue creation
-        assignees = []
-        print("Note: Assignees will be set via GitHub Actions workflow after issue creation")
+        # Don't assign programmatically - Copilot will be assigned by GitHub Actions workflow
+        # or manually from the UI after issue is created
+        assignees = []  # Empty - let GitHub Actions handle assignment
     
         labels = ["jira-auto-fix"]
         # Create the issue (pass repo to get an Issue object when possible)
 
-        title = f"{jira_summary} - {jira_issue_key}"
+        # Get actual bug data for title
+        fields = self.bug_data['fields']
+        bug_key = self.bug_data['key']
+        summary = fields.get('summary', 'No title')
+        
+        title = f"[{bug_key}] {summary}"
         # Use the issue generator to create the body
         generator = IssueBodyGenerator()
         body = generator.generate(self.bug_data, CONFIG, self.attachments)
@@ -531,7 +527,4 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
-
-
 
