@@ -12,11 +12,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup event listeners
 function setupEventListeners() {
+    const searchInput = document.getElementById('searchInput');
+    
+    // Prevent numeric input in search box
+    searchInput.addEventListener('keypress', function(e) {
+        // Check if the key pressed is a number (0-9) - handles both standard and numpad
+        if (/^\d$/.test(e.key)) {
+            e.preventDefault();
+            return;
+        }
+    });
+    
     // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             searchStudents();
         }
+    });
+    
+    // Also prevent pasting numbers
+    searchInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        // Remove all numeric characters from pasted text
+        const filteredText = pastedText.replace(/[0-9]/g, '');
+        // Insert the filtered text at cursor position
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        const currentValue = this.value;
+        this.value = currentValue.substring(0, start) + filteredText + currentValue.substring(end);
+        // Set cursor position after inserted text
+        this.selectionStart = this.selectionEnd = start + filteredText.length;
+        // Trigger input event for any dependent handlers
+        this.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
     // Close modal when clicking outside
