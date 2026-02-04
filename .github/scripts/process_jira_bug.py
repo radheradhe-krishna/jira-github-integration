@@ -18,7 +18,7 @@ from urllib.parse import quote
 import time
 
 # Add parent directory to path to import from issue_creator
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # Import the issue body generator
 from issue_generator import IssueBodyGenerator
@@ -531,6 +531,7 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 
 
