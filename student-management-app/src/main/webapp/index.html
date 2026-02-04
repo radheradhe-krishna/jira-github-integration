@@ -29,8 +29,10 @@
           type="text"
           id="searchInput"
           placeholder="Search students by name..."
+          aria-describedby="searchInputHelp"
           oninput="this.value = this.value.replace(/[0-9]/g, '')"
         />
+        <span id="searchInputHelp" style="position: absolute; left: -10000px;">Numbers are not allowed in name search</span>
         <button onclick="searchStudents()" class="btn btn-primary">
           Search
         </button>
