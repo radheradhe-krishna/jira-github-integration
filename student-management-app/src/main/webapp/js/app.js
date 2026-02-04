@@ -19,11 +19,20 @@ function setupEventListeners() {
         // Prevent numeric characters (0-9)
         if (/[0-9]/.test(e.key)) {
             e.preventDefault();
-            return false;
+            return;
         }
         
         if (e.key === 'Enter') {
             searchStudents();
+        }
+    });
+    
+    // Remove numeric characters from pasted or any other input
+    searchInput.addEventListener('input', function(e) {
+        const originalValue = e.target.value;
+        const sanitizedValue = originalValue.replace(/[0-9]/g, '');
+        if (originalValue !== sanitizedValue) {
+            e.target.value = sanitizedValue;
         }
     });
 
