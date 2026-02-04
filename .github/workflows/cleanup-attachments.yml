@@ -24,24 +24,24 @@ jobs:
 
       - name: Extract Jira Bug Key from PR
         id: extract
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           # Extract bug key from PR title or body
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_BODY="${{ github.event.pull_request.body }}"
-
           # Try to find bug key in title first (pattern like [BUG-123] or BUG-123)
           if [[ "$PR_TITLE" =~ \[([A-Z]+-[0-9]+)\] ]] || [[ "$PR_TITLE" =~ ([A-Z]+-[0-9]+) ]]; then
             BUG_KEY="${BASH_REMATCH[1]}"
-            echo "bug_key=$BUG_KEY" >> $GITHUB_OUTPUT
+            echo "bug_key=$BUG_KEY" >> "$GITHUB_OUTPUT"
             echo "Found bug key in title: $BUG_KEY"
           # If not in title, try PR body
           elif [[ "$PR_BODY" =~ \[([A-Z]+-[0-9]+)\] ]] || [[ "$PR_BODY" =~ ([A-Z]+-[0-9]+) ]]; then
             BUG_KEY="${BASH_REMATCH[1]}"
-            echo "bug_key=$BUG_KEY" >> $GITHUB_OUTPUT
+            echo "bug_key=$BUG_KEY" >> "$GITHUB_OUTPUT"
             echo "Found bug key in body: $BUG_KEY"
           else
             echo "No Jira bug key found in PR title or body"
-            echo "bug_key=" >> $GITHUB_OUTPUT
+            echo "bug_key=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Delete Release and Attachments
