@@ -101,6 +101,12 @@ Analyze this Jira bug, reproduce it, and implement a minimal, tested fix.
 
 8. **📝 Create Pull Request** with this structure:
 
+   **PR Title Format:** `[{bug_key}] Brief description of the fix`
+
+   Example: `[SCRUM-38] Prevent numeric input in student name search`
+
+   **PR Body:**
+
 ````markdown
 ## Fixes [{bug_key}]({jira_url})
 
