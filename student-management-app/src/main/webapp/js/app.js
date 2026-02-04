@@ -16,13 +16,15 @@ function setupEventListeners() {
     
     // Prevent numeric input in search box
     searchInput.addEventListener('keypress', function(e) {
-        // Check if the key pressed is a number (0-9)
-        if (e.key >= '0' && e.key <= '9') {
+        // Check if the key pressed is a number (0-9) - handles both standard and numpad
+        if (/^\d$/.test(e.key)) {
             e.preventDefault();
             return;
         }
-        
-        // Search on Enter key
+    });
+    
+    // Search on Enter key
+    searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             searchStudents();
         }
@@ -41,6 +43,8 @@ function setupEventListeners() {
         this.value = currentValue.substring(0, start) + filteredText + currentValue.substring(end);
         // Set cursor position after inserted text
         this.selectionStart = this.selectionEnd = start + filteredText.length;
+        // Trigger input event for any dependent handlers
+        this.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
     // Close modal when clicking outside
