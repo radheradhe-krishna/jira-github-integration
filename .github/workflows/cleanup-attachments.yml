@@ -1,0 +1,48 @@
+name: Cleanup Jira Attachments
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    # Only run if PR was merged (not just closed)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Extract Jira Bug Key from PR
+        id: extract
+        run: |
+          # Extract bug key from PR title or body
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          
+          # Look for pattern like [BUG-123] or BUG-123
+          if [[ "$PR_TITLE" =~ \[([A-Z]+-[0-9]+)\] ]] || [[ "$PR_TITLE" =~ ([A-Z]+-[0-9]+) ]]; then
+            BUG_KEY="${BASH_REMATCH[1]}"
+            echo "bug_key=$BUG_KEY" >> $GITHUB_OUTPUT
+            echo "Found bug key: $BUG_KEY"
+          else
+            echo "No Jira bug key found in PR title"
+            echo "bug_key=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Delete Release and Attachments
+        if: steps.extract.outputs.bug_key != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUG_KEY: ${{ steps.extract.outputs.bug_key }}
+        run: |
+          python .github/scripts/cleanup_attachments.py "$BUG_KEY"
