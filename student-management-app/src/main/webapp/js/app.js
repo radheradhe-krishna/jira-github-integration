@@ -12,23 +12,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup event listeners
 function setupEventListeners() {
+    const searchInput = document.getElementById('searchInput');
+    
     // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             searchStudents();
         }
     });
 
     // Prevent numeric input in search box
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    searchInput.addEventListener('keypress', function(e) {
         // Check if the key pressed is a number (0-9)
-        if (e.key >= '0' && e.key <= '9') {
+        if (/^[0-9]$/.test(e.key)) {
             e.preventDefault();
         }
     });
 
     // Prevent pasting numbers in search box
-    document.getElementById('searchInput').addEventListener('input', function(e) {
+    searchInput.addEventListener('input', function(e) {
         // Remove any numeric characters from the input
         this.value = this.value.replace(/[0-9]/g, '');
     });
