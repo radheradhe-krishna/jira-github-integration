@@ -1,8 +1,3 @@
-"""
-Zero-Cost Jira Bug Processor
-Runs entirely on GitHub Actions - No external servers needed!
-"""
-
 import os
 import sys
 import json
@@ -16,8 +11,8 @@ from pathlib import Path
 from urllib.parse import quote
 import time
 
-# Import the issue body generator
-from issue_generator import IssueBodyGenerator, create_issue_with_gh
+from issue_generator import IssueBodyGenerator
+from github_client import create_issue_with_gh
 
 # Configuration from GitHub Secrets
 CONFIG = {
@@ -527,4 +522,5 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
