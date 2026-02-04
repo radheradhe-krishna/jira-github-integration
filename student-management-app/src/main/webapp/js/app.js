@@ -19,6 +19,20 @@ function setupEventListeners() {
         }
     });
 
+    // Prevent numeric input in search box
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        // Check if the key pressed is a number (0-9)
+        if (e.key >= '0' && e.key <= '9') {
+            e.preventDefault();
+        }
+    });
+
+    // Prevent pasting numbers in search box
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        // Remove any numeric characters from the input
+        this.value = this.value.replace(/[0-9]/g, '');
+    });
+
     // Close modal when clicking outside
     window.onclick = function(event) {
         const modal = document.getElementById('studentModal');
