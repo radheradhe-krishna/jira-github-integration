@@ -12,10 +12,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    const searchInput = document.getElementById('searchInput');
+    
+    // Prevent numeric characters in search input
+    searchInput.addEventListener('keypress', function(e) {
+        // Check if the key is a number (0-9)
+        if (e.key >= '0' && e.key <= '9') {
+            e.preventDefault();
+        }
+        
+        // Search on Enter key
         if (e.key === 'Enter') {
             searchStudents();
+        }
+    });
+
+    // Also prevent pasting numbers
+    searchInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        // Get clipboard data and remove numeric characters
+        const pasteData = e.clipboardData.getData('text');
+        const filteredData = pasteData.replace(/[0-9]/g, '');
+        // Insert the filtered text at cursor position
+        const start = searchInput.selectionStart;
+        const end = searchInput.selectionEnd;
+        const currentValue = searchInput.value;
+        searchInput.value = currentValue.substring(0, start) + filteredData + currentValue.substring(end);
+        // Set cursor position after the inserted text
+        const newCursorPos = start + filteredData.length;
+        searchInput.setSelectionRange(newCursorPos, newCursorPos);
+    });
+
+    // Additional safeguard: strip any numeric characters from input (catches all input methods)
+    searchInput.addEventListener('input', function(e) {
+        const cursorPosition = searchInput.selectionStart;
+        const originalValue = searchInput.value;
+        const filteredValue = originalValue.replace(/[0-9]/g, '');
+        
+        // Only update if something was filtered out
+        if (originalValue !== filteredValue) {
+            searchInput.value = filteredValue;
+            // Adjust cursor position based on how many characters were removed before it
+            const removedBeforeCursor = originalValue.substring(0, cursorPosition).length - 
+                                       filteredValue.substring(0, cursorPosition).length;
+            searchInput.setSelectionRange(cursorPosition - removedBeforeCursor, cursorPosition - removedBeforeCursor);
         }
     });
 
