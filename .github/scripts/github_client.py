@@ -11,32 +11,6 @@ except Exception:
     Github = None
     Issue = None
 
-
-def severity_label(cvss_raw) -> str:
-    try:
-        score = float(cvss_raw) if cvss_raw not in ("N/A", None, "") else 0.0
-    except (TypeError, ValueError):
-        score = 0.0
-    if score >= 9.0:
-        return "severity:critical"
-    if score >= 7.0:
-        return "severity:high"
-    if score >= 4.0:
-        return "severity:medium"
-    return "severity:low"
-
-def build_issue_labels(vuln: pd.Series, extra_labels: Sequence[str]) -> List[str]:
-    labels: List[str] = list(extra_labels) if extra_labels else []
-    labels.append("vulnerability")
-    labels.append(severity_label(vuln.get("CVSS Score")))
-    seen = set()
-    deduped: List[str] = []
-    for label in labels:
-        if label and label not in seen:
-            deduped.append(label)
-            seen.add(label)
-    return deduped
-
 def create_issue_with_gh(
     title: str,
     body: str,
