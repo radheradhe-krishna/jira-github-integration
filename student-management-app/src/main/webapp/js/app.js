@@ -12,11 +12,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup event listeners
 function setupEventListeners() {
+    const searchInput = document.getElementById('searchInput');
+    
     // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    searchInput.addEventListener('keypress', function(e) {
+        // Prevent numeric characters (0-9)
+        if (/^\d$/.test(e.key)) {
+            e.preventDefault();
+        }
+        
         if (e.key === 'Enter') {
             searchStudents();
         }
+    });
+    
+    // Filter out numbers from pasted text
+    searchInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pasteData = e.clipboardData.getData('text');
+        const filteredData = pasteData.replace(/\d/g, '');
+        const start = searchInput.selectionStart;
+        const end = searchInput.selectionEnd;
+        const currentValue = searchInput.value;
+        searchInput.value = currentValue.substring(0, start) + filteredData + currentValue.substring(end);
+        searchInput.selectionStart = searchInput.selectionEnd = start + filteredData.length;
     });
 
     // Close modal when clicking outside
