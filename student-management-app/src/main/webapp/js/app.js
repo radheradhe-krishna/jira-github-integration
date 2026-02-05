@@ -19,6 +19,12 @@ function setupEventListeners() {
         }
     });
 
+    // Prevent numeric input in search box
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        // Remove any numeric characters from the input
+        this.value = this.value.replace(/[0-9]/g, '');
+    });
+
     // Close modal when clicking outside
     window.onclick = function(event) {
         const modal = document.getElementById('studentModal');
