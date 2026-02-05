@@ -12,8 +12,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup event listeners
 function setupEventListeners() {
+    const searchInput = document.getElementById('searchInput');
+    
+    // Prevent numeric input in search box
+    searchInput.addEventListener('keydown', function(e) {
+        // Check if it's a numeric key (0-9)
+        const isNumeric = e.key >= '0' && e.key <= '9';
+        
+        // Prevent numeric input
+        if (isNumeric) {
+            e.preventDefault();
+        }
+    });
+    
     // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             searchStudents();
         }
